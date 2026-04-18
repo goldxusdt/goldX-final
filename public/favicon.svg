@@ -1,0 +1,11 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gold-luxury" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37" />
+      <stop offset="50%" stop-color="#FFFACD" />
+      <stop offset="100%" stop-color="#D4AF37" />
+    </linearGradient>
+  </defs>
+  <path d="M50 5 L95 50 L50 95 L5 50 Z" fill="#0A0A0A" stroke="url(#gold-luxury)" stroke-width="4" />
+  <path d="M48 35 Q40 35 40 50 Q40 65 48 65 Q55 65 55 58 H48 V54 H60 V58 Q60 72 48 72 Q33 72 33 50 Q33 28 48 28 Q55 28 62 35 L58 40 Q53 35 48 35 Z" fill="url(#gold-luxury)" />
+</svg>

@@ -1,0 +1,115 @@
+Category,Subcategory,Name,Description,Data Type / Method,Default / Endpoint,Constraints / Permissions,SQL / Logic
+Enum,,user_role,User roles for platform access,ENUM,"'user', 'admin'",NOT NULL,CREATE TYPE public.user_role AS ENUM ('user' 'admin')
+Enum,,wallet_type,Wallet types for balance management,ENUM,"'deposit', 'roi', 'bonus', 'withdrawal'",NOT NULL,CREATE TYPE public.wallet_type AS ENUM ('deposit' 'roi' 'bonus' 'withdrawal')
+Enum,,transaction_type,Types of financial transactions,ENUM,"'deposit', 'withdrawal', 'roi_credit', 'referral_commission', 'deposit_fee', 'withdrawal_fee'",NOT NULL,CREATE TYPE public.transaction_type AS ENUM ('deposit' 'withdrawal' 'roi_credit' 'referral_commission' 'deposit_fee' 'withdrawal_fee')
+Enum,,transaction_status,Status of transactions,ENUM,"'pending', 'approved', 'rejected', 'completed'",NOT NULL,CREATE TYPE public.transaction_status AS ENUM ('pending' 'approved' 'rejected' 'completed')
+Enum,,kyc_status,KYC verification status,ENUM,"'not_submitted', 'pending', 'approved', 'rejected'",NOT NULL,CREATE TYPE public.kyc_status AS ENUM ('not_submitted' 'pending' 'approved' 'rejected')
+Enum,,ticket_status,Support ticket status,ENUM,"'open', 'in_progress', 'resolved', 'closed'",NOT NULL,CREATE TYPE public.ticket_status AS ENUM ('open' 'in_progress' 'resolved' 'closed')
+Enum,,network_type,Blockchain network types,ENUM,"'BEP20', 'TRC20'",NOT NULL,CREATE TYPE public.network_type AS ENUM ('BEP20' 'TRC20')
+Table,profiles,id,Primary identifier,UUID,auth.users.id,PRIMARY KEY REFERENCES auth.users(id),
+Table,profiles,email,User email address,TEXT,,NOT NULL,
+Table,profiles,username,Unique username,TEXT,,UNIQUE,
+Table,profiles,full_name,User's full name,TEXT,,,
+Table,profiles,phone,User's phone number,TEXT,,,
+Table,profiles,address,User's physical address,TEXT,,,
+Table,profiles,role,User role,user_role,user,NOT NULL,
+Table,profiles,referrer_id,ID of referring user,UUID,,REFERENCES public.profiles(id),
+Table,profiles,referral_code,Unique referral code,TEXT,,UNIQUE NOT NULL,
+Table,profiles,kyc_status,Current KYC status,kyc_status,not_submitted,NOT NULL,
+Table,profiles,is_active,Account active status,BOOLEAN,true,NOT NULL,
+Table,profiles,created_at,Creation timestamp,TIMESTAMPTZ,NOW(),NOT NULL,
+Table,profiles,updated_at,Last update timestamp,TIMESTAMPTZ,NOW(),NOT NULL,
+Table,wallets,id,Primary identifier,UUID,uuid_generate_v4(),PRIMARY KEY,
+Table,wallets,user_id,Owner ID,UUID,,REFERENCES public.profiles(id) NOT NULL,
+Table,wallets,wallet_type,Type of wallet,wallet_type,,NOT NULL,
+Table,wallets,balance,Current balance,DECIMAL(20 8),0,NOT NULL,
+Table,transactions,id,Primary identifier,UUID,uuid_generate_v4(),PRIMARY KEY,
+Table,transactions,user_id,User ID,UUID,,REFERENCES public.profiles(id) NOT NULL,
+Table,transactions,transaction_type,Type of transaction,transaction_type,,NOT NULL,
+Table,transactions,amount,Transaction amount,DECIMAL(20 8),,NOT NULL,
+Table,transactions,fee,Applied fee,DECIMAL(20 8),0,,
+Table,coupons,id,Primary identifier,UUID,gen_random_uuid(),PRIMARY KEY,
+Table,coupons,code,Unique coupon code,TEXT,,UNIQUE NOT NULL,
+Table,coupons,percentage,Bonus percentage,NUMERIC,0,NOT NULL,
+Table,coupons,usage_limit,Max uses,INTEGER,100,,
+Table,coupons,used_count,Current uses,INTEGER,0,,
+Table,landing_page_settings,id,Primary identifier,UUID,gen_random_uuid(),PRIMARY KEY,
+Table,landing_page_settings,section_name,Section identifier,TEXT,,UNIQUE NOT NULL,
+Table,landing_page_settings,content,Section content,JSONB,,NOT NULL,
+Table,tutorials,id,Primary identifier,UUID,gen_random_uuid(),PRIMARY KEY,
+Table,tutorials,title,Tutorial title,TEXT,,NOT NULL,
+Table,tutorials,video_url,External video link,TEXT,,,
+Table,tutorials,order_index,Display order,INTEGER,0,,
+
+Table,transactions,net_amount,Final amount after fee,DECIMAL(20 8),,NOT NULL,
+Table,transactions,status,Transaction status,transaction_status,pending,NOT NULL,
+Table,transactions,network,Blockchain network,network_type,,,
+Table,transactions,wallet_address,Target wallet address,TEXT,,,
+Table,transactions,transaction_hash,Blockchain TX hash,TEXT,,,
+Table,deposits,id,Primary identifier,UUID,uuid_generate_v4(),PRIMARY KEY,
+Table,deposits,transaction_id,Linked transaction ID,UUID,,REFERENCES public.transactions(id) UNIQUE NOT NULL,
+Table,deposits,amount,Gross amount,DECIMAL(20 8),,NOT NULL,
+Table,deposits,transaction_hash,TX hash for verification,TEXT,,NOT NULL,
+Table,withdrawals,id,Primary identifier,UUID,uuid_generate_v4(),PRIMARY KEY,
+Table,withdrawals,transaction_id,Linked transaction ID,UUID,,REFERENCES public.transactions(id) UNIQUE NOT NULL,
+Table,withdrawals,wallet_address,User destination address,TEXT,,NOT NULL,
+Table,withdrawals,cooling_period_end,Withdrawal lock end,TIMESTAMPTZ,,NOT NULL,
+Table,withdrawals,is_referral_bonus,Is referral bonus withdrawal,BOOLEAN,false,NOT NULL,
+Table,referral_commissions,id,Primary identifier,UUID,uuid_generate_v4(),PRIMARY KEY,
+Table,referral_commissions,referrer_id,Referrer ID,UUID,,REFERENCES public.profiles(id) NOT NULL,
+Table,referral_commissions,referred_user_id,Referred ID,UUID,,REFERENCES public.profiles(id) NOT NULL,
+Table,referral_commissions,level,MLM Level,INTEGER,,CHECK (level BETWEEN 1 AND 4),
+Table,referral_commissions,commission_amount,Earned amount,DECIMAL(20 8),,NOT NULL,
+Table,referral_commissions,is_locked,Lock status,BOOLEAN,true,NOT NULL,
+Table,roi_records,id,Primary identifier,UUID,uuid_generate_v4(),PRIMARY KEY,
+Table,roi_records,user_id,User ID,UUID,,REFERENCES public.profiles(id) NOT NULL,
+Table,roi_records,deposit_id,Linked deposit ID,UUID,,REFERENCES public.deposits(id) NOT NULL,
+Table,roi_records,roi_amount,ROI amount credited,DECIMAL(20 8),,NOT NULL,
+Table,roi_records,month_number,ROI Month,INTEGER,,NOT NULL,
+Table,platform_settings,key,Setting key,TEXT,,PRIMARY KEY,
+Table,platform_settings,value,Setting value,JSONB,,NOT NULL,
+Index,profiles,idx_profiles_referrer,Speed up referral lookups,INDEX,referrer_id,,CREATE INDEX idx_profiles_referrer ON public.profiles(referrer_id)
+Index,transactions,idx_transactions_user,Speed up user transaction queries,INDEX,user_id,,CREATE INDEX idx_transactions_user ON public.transactions(user_id)
+Index,deposits,idx_deposits_status,Filter deposits by status,INDEX,status,,CREATE INDEX idx_deposits_status ON public.deposits(status)
+Policy,profiles,Users can view own profile,Restrict visibility to owner,SELECT,auth.uid() = id,,CREATE POLICY ""Users can view own profile"" ON profiles FOR SELECT USING (auth.uid() = id)
+Policy,profiles,Admins can view all profiles,Grant admin full access,SELECT,is_admin = true,,CREATE POLICY ""Admins can view all profiles"" ON profiles FOR SELECT USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+Policy,transactions,Users can view own transactions,Restrict visibility to owner,SELECT,auth.uid() = user_id,,CREATE POLICY ""Users can view own transactions"" ON transactions FOR SELECT USING (auth.uid() = user_id)
+Policy,transactions,Users can create transactions,Allow requests,INSERT,auth.uid() = user_id,,CREATE POLICY ""Users can create transactions"" ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id)
+Trigger,profiles,on_auth_user_created,Sync auth user to profile,FUNCTION,handle_new_user(),AFTER INSERT ON auth.users,CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user()
+Function,handle_new_user,Metadata Sync,Logic for profile creation,RETURNS TRIGGER,INTERNAL,,CREATE FUNCTION handle_new_user() RETURNS TRIGGER AS $$ ... $$ LANGUAGE plpgsql SECURITY DEFINER
+Function,approve_deposit,Admin Logic,RPC for deposit approval,RETURNS JSON,admin-only,,CREATE OR REPLACE FUNCTION approve_deposit(deposit_id UUID admin_id UUID) RETURNS JSON ...
+Function,approve_withdrawal,Admin Logic,RPC for withdrawal approval,RETURNS JSON,admin-only,,CREATE OR REPLACE FUNCTION approve_withdrawal(withdrawal_id UUID admin_id UUID) RETURNS JSON ...
+Function,calculate_roi,ROI Calculation,Internal logic for monthly ROI,RETURNS VOID,Cron job,,CREATE OR REPLACE FUNCTION calculate_roi() RETURNS VOID ...
+Edge Function,send-otp,OTP Email Service,Sends verification code via Zoho Mail,POST,/functions/v1/send-otp,,Invoke via supabase.functions.invoke('send-otp' { body: { email purpose } })
+Edge Function,verify-otp,OTP Verification,Verifies the 6-digit code,POST,/functions/v1/verify-otp,,Invoke via supabase.functions.invoke('verify-otp' { body: { email otp purpose } })
+Edge Function,create-user,User Creation,Finalize signup after OTP,POST,/functions/v1/create-user,,Invoke via supabase.functions.invoke('create-user' { body: { email password userData } })
+Edge Function,verify-transaction,Blockchain Verification,Verifies TX hash for deposit,POST,/functions/v1/verify-transaction,,Invoke via supabase.functions.invoke('verify-transaction' { body: { tx_hash network } })
+Secret,ZOHO_API_KEY,Email Service Auth,API key for Zoho Mail SMTP/API,STRING,,,supabase secrets set ZOHO_API_KEY=...
+Secret,ZOHO_SMTP_HOST,Email Server,SMTP host address,STRING,smtp.zoho.com,,supabase secrets set ZOHO_SMTP_HOST=...
+Env Var,VITE_SUPABASE_URL,Backend URL,Supabase project endpoint,STRING,https://...supabase.co,,Defined in .env
+Env Var,VITE_SUPABASE_ANON_KEY,Public Key,Supabase public anon key,STRING,eyJ...h,,Defined in .env
+Value,Referral,Level 1 Commission,MLM Level 1 earning rate,PERCENTAGE,8%,,Set in platform_settings or code
+Value,Referral,Level 2 Commission,MLM Level 2 earning rate,PERCENTAGE,4%,,Set in platform_settings or code
+Value,Referral,Level 3 Commission,MLM Level 3 earning rate,PERCENTAGE,2%,,Set in platform_settings or code
+Value,Referral,Level 4 Commission,MLM Level 4 earning rate,PERCENTAGE,1%,,Set in platform_settings or code
+Value,Investment,Monthly ROI,Monthly return on investment,PERCENTAGE,10%,,Set in platform_settings or code
+Value,Transaction,Deposit Fee,Platform fee on deposits,PERCENTAGE,5%,,Set in platform_settings or code
+Value,Transaction,Withdrawal Fee,Platform fee on withdrawals,PERCENTAGE,5%,,Set in platform_settings or code
+SQL Editor,Admin,Get Total Deposits,Query for total confirmed deposits,SQL,,,SELECT SUM(amount) FROM deposits WHERE status = 'completed'
+SQL Editor,Admin,Get Active Users,Query for active investors,SQL,,,SELECT COUNT(DISTINCT user_id) FROM deposits WHERE status = 'completed'
+SQL Editor,Admin,Reset User Password,Force reset a user's password,SQL,,,UPDATE auth.users SET encrypted_password = crypt('new_password' gen_salt('bf')) WHERE email = 'user@example.com'
+Value,Landing,Hero Section,Main landing hero,JSON,"{""badge"": ""Live Platform Status: Active"" ""title"": ""The Gold Standard of Digital Wealth"" ...}",,
+Value,Landing,Features,Key platform features,JSON,"{""title"": ""Why Choose Us"" ""items"": [...] }",,
+Value,Landing,SEO,Search engine optimization,JSON,"{""title"": ""Gold X Usdt - Premium Crypto Investment Platform"" ...}",,
+Value,Tutorials,Deposit Tutorial,Example tutorial entry,DATA,Title: "How to Deposit USDT" | Order: 1,,
+Value,Coupons,WELCOME10,Example 10% bonus coupon,DATA,Code: "WELCOME10" | Percentage: 10,,
+Value,Admin,Super Admin Email,Initial platform administrator,DATA,admin@goldxusdt.com,,
+Value,Admin,Withdrawal Cooling,Time before ROI/Bonus withdraw,TIME,ROI: 48h | Bonus: 30d,,
+Value,Referral,Levels,MLM levels depth,INT,4 levels (8/4/2/1),,
+Value,System,Currency,Platform native asset,TEXT,USDT (BEP20 / TRC20),,
+Value,System,Min Deposit,Compulsory min investment,NUMERIC,100 USDT,,
+Value,System,Min Withdrawal,Minimum withdraw amount,NUMERIC,10 USDT,,
+Value,System,ROI Cycle,Daily/Monthly frequency,TEXT,Monthly (10%),,
+
+SQL Editor,Admin,Promote to Admin,Grant admin role to user,SQL,,,UPDATE profiles SET role = 'admin' WHERE email = 'admin@example.com'
+SQL Editor,Wallet,Sync Balances,Re-calculate wallet from transactions,SQL,,,UPDATE wallets w SET balance = (SELECT COALESCE(SUM(net_amount) 0) FROM transactions WHERE user_id = w.user_id AND transaction_type = 'deposit' AND status = 'completed') - ...

@@ -1,0 +1,43 @@
+# Gold X Usdt - Robots.txt
+# This file tells search engines which pages to crawl and which to avoid
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /wallets/
+Disallow: /transactions/
+Disallow: /deposit/
+Disallow: /withdrawal/
+Disallow: /referrals/
+Disallow: /support/
+
+# Crawl-delay to prevent server overload
+Crawl-delay: 10
+
+# Sitemap location
+Sitemap: https://goldxusdt.com/sitemap.xml
+
+# Block aggressive bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# Allow Google, Bing, and other major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
