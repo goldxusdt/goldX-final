@@ -236,6 +236,24 @@
   .sapphire-glow { box-shadow: 0 0 30px hsla(215, 100%, 50%, 0.3); }
   .emerald-glow { box-shadow: 0 0 30px hsla(150, 100%, 40%, 0.3); }
 
+  /* Dedicated Nav Scrollbar */
+  .nav-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .nav-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+  }
+  .nav-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, hsla(47, 65%, 53%, 0.1), hsla(47, 65%, 53%, 0.4), hsla(47, 65%, 53%, 0.1));
+    border-radius: 10px;
+    border: 1px solid hsla(47, 65%, 53%, 0.1);
+  }
+  .nav-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsla(47, 65%, 53%, 0.6);
+    box-shadow: 0 0 10px hsla(47, 65%, 53%, 0.3);
+  }
+
   .responsive-container {
     @apply w-full max-w-7xl mx-auto px-4 md:px-6;
   }
