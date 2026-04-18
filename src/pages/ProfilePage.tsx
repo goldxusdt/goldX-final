@@ -213,11 +213,13 @@ export default function ProfilePage() {
       if (updateError) throw updateError;
       toast.success('Document uploaded. Status set to pending.');
       loadProfile();
-    } catch (error) {
-      toast.error('Upload failed');
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
     } finally {
       setUploading(false);
     }
+
   };
 
   const kycDocs = [
