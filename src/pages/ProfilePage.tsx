@@ -168,7 +168,28 @@ export default function ProfilePage() {
     try {
       const filePath = `kyc/${user.id}/${docType}_${Date.now()}.${file.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage.from('kyc_documents').upload(filePath, file, { upsert: true });
-      if (uploadError) throw uploadError;
+      
+      if (uploadError) {
+        await (supabase.from('upload_logs') as any).insert([{
+          user_id: user.id,
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          status: 'failure',
+          error_message: uploadError.message,
+          metadata: { bucket: 'kyc_documents', filePath }
+        }]);
+        throw uploadError;
+      }
+
+      await (supabase.from('upload_logs') as any).insert([{
+        user_id: user.id,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        status: 'success',
+        metadata: { bucket: 'kyc_documents', filePath }
+      }]);
 
       const { data: urlData } = supabase.storage.from('kyc_documents').getPublicUrl(filePath);
       const updateData: any = {};
