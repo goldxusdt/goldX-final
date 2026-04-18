@@ -1,3 +1,7 @@
+# Welcome to Your Miaoda Project
+Miaoda Application Link URL
+    URL:https://medo.dev/projects/app-a8oqo7dishz5
+
 # Email Templates - Gold X Usdt
 
 This directory contains professional, production-ready HTML email templates for the Gold X Usdt platform.
