@@ -9,6 +9,13 @@ function urlBase64ToUint8Array(base64String: string) {
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
+
+  // If the key is in DER format (SubjectPublicKeyInfo), extract the raw 65-byte public key
+  // Raw uncompressed P-256 public key starts with 0x04 and is 65 bytes long
+  if (outputArray.length > 65) {
+    return outputArray.slice(-65);
+  }
+
   return outputArray;
 }
 
