@@ -1,7 +1,11 @@
-# -------------------
-# Supabase Config
-# ------------------- enabled = true port = 54322
-major_version = 15 enabled = true
-site_url = "http://localhost:3000" enable_confirmations = true enabled = true
+[auth.email]
+enable_confirmations = true
+
+ [auth.phone]
+ enable_confirmations = false
+
+[auth.external.google]
+enabled = true
 client_id = "177188909353-25feb1b7el138ljg1r1ch1oc1j2g73cl.apps.googleusercontent.com"
-secret = "env(GOOGLE_CLIENT_SECRET)"
+client_secret = "env(GOOGLE_CLIENT_SECRET)"
+
